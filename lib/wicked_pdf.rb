@@ -26,6 +26,7 @@ class WickedPdf
   include Progress
 
   def initialize(wkhtmltopdf_binary_path = nil)
+    puts "WickedPdf: EM fork"
     @exe_path = wkhtmltopdf_binary_path || find_wkhtmltopdf_binary_path
     raise "Location of #{EXE_NAME} unknown" if @exe_path.empty?
     raise "Bad #{EXE_NAME}'s path: #{@exe_path}" unless File.exist?(@exe_path)
@@ -106,15 +107,30 @@ class WickedPdf
     _stdin, stdout, _stderr = Open3.popen3(@exe_path + ' -V')
     @binary_version = parse_version(stdout.gets(nil))
   rescue StandardError
-    DEFAULT_BINARY_VERSION
+    binary_version_with_fallback
   end
 
   def parse_version(version_info)
+    puts "WickedPdf: parse_version attempting to parse #{version_info.inspect}"
     match_data = /wkhtmltopdf\s*(\d*\.\d*\.\d*\w*)/.match(version_info)
     if match_data && (match_data.length == 2)
+      puts "WickedPdf: parse successful, using parsed binary version #{match_data[1]}"
       Gem::Version.new(match_data[1])
     else
+      puts "WickedPdf: parse unsuccessful, calling binary_version_with_fallback"
+      binary_version_with_fallback
+    end
+  end
+
+  def binary_version_with_fallback
+    allow_binary_version_fallback = WickedPdf.config.fetch(:allow_binary_version_fallback) { true }
+    puts "WickedPdf: allow_binary_version_fallback #{allow_binary_version_fallback.inspect}"
+    if allow_binary_version_fallback
+      puts "WickedPdf: fallback allowed, returning DEFAULT_BINARY_VERSION #{DEFAULT_BINARY_VERSION}"
       DEFAULT_BINARY_VERSION
+    else
+      puts "WickedPdf: fallback not allowed, returning BINARY_VERSION_WITHOUT_DASHES #{BINARY_VERSION_WITHOUT_DASHES}"
+      BINARY_VERSION_WITHOUT_DASHES
     end
   end
 
