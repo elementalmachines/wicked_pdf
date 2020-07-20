@@ -24,4 +24,8 @@ WickedPdf.config = {
   # 'xvfb-run' command, in order to simulate an X server.
   #
   # use_xvfb: true,
+
+  # Whether to allow binary version fallback if binary version not detected.
+  # If false and we can't detect the version, we assume version is BINARY_VERSION_WITHOUT_DASHES
+  allow_binary_version_fallback: true,
 }
